@@ -1,0 +1,69 @@
+# =========================
+# Root / General
+# =========================
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+.vscode/
+.idea/
+
+# =========================
+# Environment variables
+# =========================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+server/.env
+client/.env
+
+# =========================
+# Node modules (both apps)
+# =========================
+node_modules/
+server/node_modules/
+client/node_modules/
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# Server (Node/Express)
+# =========================
+server/dist/
+server/build/
+server/uploads/
+server/coverage/
+
+# =========================
+# Client (React/Vite/CRA)
+# =========================
+client/dist/
+client/build/
+client/.cache/
+client/coverage/
+
+# =========================
+# Testing
+# =========================
+coverage/
+*.lcov
+
+# =========================
+# Misc
+# =========================
+*.pid
+*.seed
+*.pid.lock
+.eslintcache
+.vercel
