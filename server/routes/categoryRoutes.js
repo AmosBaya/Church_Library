@@ -5,8 +5,8 @@ const router = express.Router();
 // create category route
 router.post('/create', createCategory);
 
-//get categories route
-router.get('/all', getCategories);
+//get all categories route
+router.get('/', getCategories);
 
 // delete catefory
 router.delete('/:id', deleteCategory);
