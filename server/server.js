@@ -7,7 +7,8 @@ const dbConnect = require('./config/dbConnect');
 // routes imports
 const authRoutes = require('./routes/authRoutes');
 const userTest = require('./routes/userRoutes');
-const categoryRoutes =require('./routes/categoryRoutes')
+const categoryRoutes =require('./routes/categoryRoutes');
+const bookRoutes = require('./routes/bookRoutes');
 
 //middlewares
 app.use(cors())
@@ -16,7 +17,8 @@ app.use(express.json());
 //routes
 app.use("/api/auth", authRoutes);
 app.use("/api/test", userTest);
-app.use("/api/category", categoryRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/books", bookRoutes);
 
 // starting app
 const PORT = process.env.PORT || 5000
