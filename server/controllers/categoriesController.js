@@ -56,6 +56,7 @@ exports.getCategories = async (req, res) => {
   }
 };
 
+// delete a category 
 exports.deleteCategory = async (req,res)=>{
   try {
 
