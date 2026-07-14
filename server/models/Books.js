@@ -23,13 +23,25 @@ const bookSchema = new mongoose.Schema({
         type:Number,
         min:0,
         default:1,
-        required:true
+        required:true,
+        validate: {
+            validator: function(value) {
+                return value >= 0;
+            },
+            message: 'totalCopies cannot be negative'
+        }
     },
     availableCopies:{
         type:Number,
         min:0,
         default:1,
-        required:true
+        required:true,
+        validate: {
+            validator: function(value) {
+                return value >= 0;
+            },
+            message: 'availableCopies cannot be negative'
+        }
     },
     status:{
         type:String,
@@ -40,6 +52,10 @@ const bookSchema = new mongoose.Schema({
         type:[String],
         required:true
     }
-});
+},
+    {
+        timestamps:true
+    }
+);
 
 module.exports=mongoose.model("Book", bookSchema);
