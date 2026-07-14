@@ -26,7 +26,7 @@ exports.borrowRequest= async (req,res)=>{
             user: userId,
             book: bookId,
             status: 'pending',
-            requestGroupId: requestGroupId, //if borrowing multiple books
+            requestGroupId: requestGroupId, //if borrowing multiple books all will have one id
             borrowRequestedAt: new Date()
         });
 
@@ -118,14 +118,26 @@ exports.approveBorrow= async (req,res)=>{
 
         const borrowId = req.params.id
 
-        const borrow = await Borrow.findById(borrowId);
-
-        if(!borrow){
-            return res.status(404).json({
-                message:"Borrow not found"
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({
+                message: "Admin privileges required"
             });
         }
 
+        const borrow = await Borrow.findById({id: borrowId, status: 'pending'});
+
+        if(!borrow){
+            return res.status(404).json({
+                message:"Borrow request not found"
+            });
+        }
+
+        // 3. Check status
+        if (borrow.status !== 'pending') {
+            return res.status(400).json({
+                message: `Cannot approve a request with status: ${borrow.status}. Only pending requests can be approved.`
+            });
+        }
          
         borrow.status="approved"
         borrow.borrowApprovedAt= new Date()
@@ -135,7 +147,7 @@ exports.approveBorrow= async (req,res)=>{
         const approved = await borrow.save();
 
         res.status(200).json({
-            message:`Borrow ${approved.book.title} approved successfully`,
+            message:"Borrow approved successfully",
             status:approved.status
         });
 
@@ -148,7 +160,7 @@ exports.approveBorrow= async (req,res)=>{
 }
 
 // cancell borrow book request - for the user
-exports.cancelleBorrow= async (req,res)=>{
+exports.cancelBorrow= async (req,res)=>{
     try {
         const user =req.user._id;
 
@@ -162,20 +174,36 @@ exports.cancelleBorrow= async (req,res)=>{
             });
         }
 
+        // Ensure the user owns this borrow request
+        if (borrow.user.toString() !== user.toString()) {
+            return res.status(403).json({
+                message: "You are not authorized to cancel this request"
+            });
+        }
+
+        // 3. Check status
+        if (borrow.status !== 'pending') {
+            return res.status(400).json({
+                message: `Cannot cancel a request with status: ${borrow.status}. Only pending requests can be cancelled.`
+            });
+        }
+
+        // change status
         borrow.status="cancelled"
         borrow.statusChangedBy=user
         
+        await borrow.save();
+
         // update the number of copies of a book
         const updateBook = await Book.findOneAndUpdate(
             { _id:borrow.book },
             { $inc: { availableCopies: 1 } },
-            { new:true }
+            { new: true, runValidators: true }
         );
 
-        await borrow.save();
-
         res.status(200).json({
-            message:"Cancelled success"
+            message: "Borrow request cancelled successfully",
+            data: { borrowId: borrow._id, bookId: borrow.book }
         });
 
     } catch (err) {
@@ -188,26 +216,77 @@ exports.cancelleBorrow= async (req,res)=>{
 
 // reject borrow book request- for the admin
 exports.rejectBorrow= async (req,res)=>{
-    
+    try {
+
+        const admin =req.user._id;
+
+        const borrowId = req.params.id;
+
+        const borrow = await Borrow.findById(borrowId);
+
+        if(!borrow){
+            return res.status(404).json({
+                message:"Borrow request not found!"
+            });
+        }
+
+        // 3. Check status before changing it
+        if (borrow.status !== 'pending') {
+            return res.status(400).json({
+                message: `Cannot rejected a request with status: ${borrow.status}. Only pending requests can be rejected.`
+            });
+        }
+
+        borrow.status="rejected"
+        borrow.statusChangedBy=admin
+        
+        await borrow.save();
+
+        // update the number of copies of a book
+        const updateBook = await Book.findOneAndUpdate(
+            { _id:borrow.book },
+            { $inc: { availableCopies: 1 } },
+            { new: true, runValidators: true }
+        );
+
+        res.status(200).json({
+            message: "Borrow request rejected successfully",
+            data: { borrowId: borrow._id, bookId: borrow.book }
+        });
+
+    } catch (err) {
+        res.status(500).json({
+            message:"Internal server error",
+            error:err.message
+        });
+    }
 }
 
-// renew book request
-exports.renewBookRequest= async (req,res)=>{}
+// get all borrow requests
+exports.getAllBorrowRequests = async (req,res)=>{
+    try {
 
-// approve renew book request
-exports.approveRenewBookRequest= async (req,res)=>{}
+        const borrowRequests = await Borrow.find({ status: 'pending' })
+            .populate('user', 'name email')  // Get user details
+            .populate('book', 'title author coverImages')  // Get book details
+            .sort({ createdAt: -1});
 
-// cancelle renew book request - the user
-exports.cancelleRenewBookRequest= async (req,res)=>{}
+        if(borrowRequests.length === 0){
+            return res.status(404).json({
+                message:"No borrow requests found"
+            });
+        }
 
-// reject renew book request - admin
-exports.rejectRenewBookRequest= async (req,res)=>{}
+        res.status(200).json({
+            message:"Requests fetch success",
+            data: borrowRequests
+        });
 
-// return book request 
-exports.returnBookRequest= async (req,res)=>{}
+    } catch (err) {
+        res.status(500).json({
+            message:"Internal server error",
+            error:err.message
+        });
+    }
+}
 
-// cancelle return book request 
-exports.cancelleReturnBookRequest= async (req,res)=>{}
-
-// complete return book request 
-exports.completeReturnBookRequest= async (req,res)=>{}
