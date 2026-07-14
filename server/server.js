@@ -9,6 +9,7 @@ const authRoutes = require('./routes/authRoutes');
 const userTest = require('./routes/userRoutes');
 const categoryRoutes =require('./routes/categoryRoutes');
 const bookRoutes = require('./routes/bookRoutes');
+const borrowRoutes = require('./routes/borrowRoutes');
 
 //middlewares
 app.use(cors())
@@ -19,6 +20,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/test", userTest);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/books", bookRoutes);
+app.use("/api/borrow", borrowRoutes);
 
 // starting app
 const PORT = process.env.PORT || 5000
