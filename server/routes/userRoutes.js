@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const verifyToken = require('../middlewares/authMiddleware')
-const authorizeRoles = require('../middlewares/roleMiddleware')
+const verifyToken = require('../middlewares/authMiddleware');
+const authorizeRoles = require('../middlewares/roleMiddleware');
 
 router.get('/admin', verifyToken, authorizeRoles("admin"), (req,res) =>{
     res.json( {
