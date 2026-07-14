@@ -8,10 +8,16 @@ const borrowSchema = new mongoose.Schema({
         required:true,
     },
 
-    books:{
+    book:{
         type:mongoose.Types.ObjectId,
         ref:'Book',
         required:true
+    },
+
+    // if the user borrows multiple books
+    requestGroupId:{
+        type:mongoose.Types.ObjectId,
+        index:true
     },
 
     status:{
@@ -26,7 +32,7 @@ const borrowSchema = new mongoose.Schema({
         default: Date.now 
     },
 
-    dateBorrowed:{
+    borrowApprovedAt:{
         type:Date,
         default:null
     },
@@ -77,12 +83,12 @@ const borrowSchema = new mongoose.Schema({
 );
 
 // 1. For the User Dashboard (Find all pending/approved books for ONE user)
-BorrowSchema.index({ user: 1, status: 1 });
+borrowSchema.index({ user: 1, status: 1 });
 
 // 2. For the Admin Dashboard (Find all pending approvals, sorted by newest first)
-BorrowSchema.index({ status: 1, createdAt: -1 });
+borrowSchema.index({ status: 1, createdAt: -1 });
 
 // 3. For the Nightly Cron Job (Find overdue approved books)
-BorrowSchema.index({ status: 1, dueDate: 1 });
+borrowSchema.index({ status: 1, dueDate: 1 });
 
 module.exports=mongoose.model('Borrow', borrowSchema);
