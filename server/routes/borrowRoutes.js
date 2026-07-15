@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { borrowRequest, approveBorrow }= require('../controllers/borrowController');
+const { borrowRequest, approveBorrow, getAllBorrowRequests }= require('../controllers/borrowController');
 const verifyUser = require('../middlewares/authMiddleware');
 const authorizeRoles = require('../middlewares/roleMiddleware');
 
@@ -8,5 +8,7 @@ const authorizeRoles = require('../middlewares/roleMiddleware');
 router.post("/", verifyUser, borrowRequest);
 
 router.patch("/approve/:id", verifyUser, authorizeRoles("admin", "manager"), approveBorrow);
+
+router.get("/all-requests",  getAllBorrowRequests);
 
 module.exports=router;
