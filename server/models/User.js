@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// will add phone number
 
 const userSchema = new mongoose.Schema({
     name:{

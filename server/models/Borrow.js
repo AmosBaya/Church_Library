@@ -47,7 +47,7 @@ const borrowSchema = new mongoose.Schema({
         default: null 
     },
 
-    // Top-level for FAST queries
+    // 
     renewalStatus: { 
         type: String, 
         enum: ['none', 'requested', 'approved', 'cancelled', 'rejected'], 
