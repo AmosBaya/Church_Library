@@ -290,3 +290,29 @@ exports.getAllBorrowRequests = async (req,res)=>{
     }
 }
 
+exports.getAllBorrowRequests = async (req,res)=>{
+    try {
+
+        const borrowRequests = await Borrow.find({ status: 'pending' })
+            .populate('user', 'name email')  // Get user details
+            .populate('book', 'title author coverImages')  // Get book details
+            .sort({ createdAt: -1});
+
+        if(borrowRequests.length === 0){
+            return res.status(404).json({
+                message:"No borrow requests found"
+            });
+        }
+
+        res.status(200).json({
+            message:"Requests fetch success",
+            data: borrowRequests
+        });
+
+    } catch (err) {
+        res.status(500).json({
+            message:"Internal server error",
+            error:err.message
+        });
+    }
+}
