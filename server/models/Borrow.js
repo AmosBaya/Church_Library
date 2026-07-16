@@ -66,6 +66,8 @@ const borrowSchema = new mongoose.Schema({
         {
             requestedAt: { type: Date, default: Date.now },
             approvedAt: { type: Date },
+            cancelledAt: { type: Date, default:null },
+            rejectedAt: { type: Date, default:null},
             previousDueDate: Date,
             newDueDate: Date,
             adminNotes: String
