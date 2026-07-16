@@ -15,7 +15,7 @@ exports.renewBookRequest= async (req,res)=>{
                 _id:borrowId,
                 user:user,
                 status:{$in:['approved', 'overdue']},
-                renewalStatus:{$in:['none','approved','cancelled']},
+                renewalStatus:{$in:['none','approved','cancelled','rejected']},
                 renewalCount:{ $lt:2 }
             },
             {
@@ -203,16 +203,21 @@ exports.cancelRenewRequest= async (req,res)=>{
                 });
             }
 
+            if(check.user.toString() !== check.toString()){
+                return res.status(403).json({
+                    message:"Not allowed to cancel renewal for this book"
+                });
+            }
             // checks the renewal status 
             if (check.renewalStatus !== "requested") {
                 return res.status(409).json({
-                    message: `Cannot cancel renewal with renewal status: ${check.renewalStatus}. Only "requested" can be approved.`
+                    message: `Cannot cancel renewal with renewal status: ${check.renewalStatus}. Only "requested" can be rejected.`
                 });
             }
 
             // the overal status of the borrow
             return res.status(409).json({
-                message: `Cannot approve renewal with status: ${check.status}, 
+                message: `Cannot reject renewal with status: ${check.status}, 
                 renewal: ${check.renewalStatus}`
             });
 
@@ -226,7 +231,6 @@ exports.cancelRenewRequest= async (req,res)=>{
                 user:user,
                 status:{$in:['approved', 'overdue']},
                 renewalStatus:'requested',
-                renewalCount:{ $lt:2 }
             },
             {
                 $set:{ 
@@ -237,15 +241,16 @@ exports.cancelRenewRequest= async (req,res)=>{
             { new:true }
         );
 
-         if (!borrow) {
+        if (!borrow) {
             // lost the race between read and write - someone else approved/changed it first
             return res.status(409).json({ 
-                message: "Renewal request state changed — please retry" 
+                message: "Renewal-cancel request state changed — please retry" 
             });
         }
 
         return res.status(200).json({
-            message: "Renewal cancelled successfully",
+            message: "Renewal request cancelled successfully",
+            renewal: borrow.renewalStatus
         });
 
     } catch (err) {
@@ -259,56 +264,74 @@ exports.cancelRenewRequest= async (req,res)=>{
 // reject renew book request - admin
 exports.rejectRenewBookRequest= async (req,res)=>{
     try {
-        const user = req.user._id
+        const admin = req.user._id
 
         const borrowId = req.params.id
+
+        
+        const existing =  await Borrow.findOne(
+            {
+                _id:borrowId,
+                status:{$in:['approved', 'overdue']},
+                renewalStatus:'requested',
+            },
+        );
+
+         // if the search returns false, then there must be a problem, 
+        if (!existing) {
+
+            // checks the specific borrow
+            const check = await Borrow.findById(borrowId);
+
+            // if it does not find it, then itdoes not exist in the db
+            if (!check) {
+                return res.status(404).json({ 
+                    message: "Borrow not found"
+                });
+            }
+
+            // checks the renewal status 
+            if (check.renewalStatus !== "requested") {
+                return res.status(409).json({
+                    message: `Cannot reject renewal with renewal status: ${check.renewalStatus}. Only "requested" can be rejected.`
+                });
+            }
+
+            // the overal status of the borrow
+            return res.status(409).json({
+                message: `Cannot reject renewal with status: ${check.status}, 
+                renewal: ${check.renewalStatus}`
+            });
+
+        }
+
+        const lastHistoryIndex = existing.renewalHistory.length - 1; // gets the position of the last renewal history e.g, when renewal history has a list of 2, db index alwasy satrt at 0, so the position of the last ihistory will be 2-1 , position 1
 
         const borrow = await Borrow.findOneAndUpdate(
             {
                 _id:borrowId,
-                user:user,
                 status:{$in:['approved', 'overdue']},
                 renewalStatus:'requested',
-                renewalCount:{ $lt:2 }
             },
             {
-                $set:{ renewalStatus:'cancelled' },
-                $push:{ renewalHistory:{ requestedAt: new Date() }}
+                $set:{ 
+                    renewalStatus:'rejected',
+                    statusChangedBy: admin,
+                    [`renewalHistory.${lastHistoryIndex}.rejectedAt`]: new Date(),
+                },
             },
             { new:true }
         );
 
-        if(!borrow){
-
-            const check = await Borrow.findById(borrowId);
-
-            if(!check){
-                return res.status(404).json({
-                    message:"Borrow not found"
-                });
-            }
-            
-            if(check.user.toString() !== userId.toString()){
-                return res.status(403).json({
-                    message:"Not allowed to renew this book"
-                });
-            }
-
-            // checking renewal limit
-            if(check.renewalCount >= 2){
-                return res.status(403).json({
-                    message:"Renew limit reached! Contact admin"
-                });
-            }
-
-            return res.status(403).json({
-                message: `Cannot reject renewal — status: ${check.status}, 
-                renewal: ${check.renewalStatus}`
+        if (!borrow) {
+            // lost the race between read and write - someone else approved/changed it first
+            return res.status(409).json({ 
+                message: "Renewal-reject request state changed — please retry" 
             });
         }
 
-        res.status(200).json({
-            message:"Renew rejected sent successfully"
+        return res.status(200).json({
+            message: "Renewal request rejected successfully"
         });
 
     } catch (err) {
@@ -318,3 +341,4 @@ exports.rejectRenewBookRequest= async (req,res)=>{
         });
     }
 }
+
