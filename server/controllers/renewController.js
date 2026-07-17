@@ -175,7 +175,7 @@ exports.approveRenewalRequest= async (req,res)=>{
 }
 
 // cancel renew book request - the user
-exports.cancelRenewRequest= async (req,res)=>{
+exports.cancelRenewalRequest= async (req,res)=>{
     try {
         const user = req.user._id
 
@@ -262,7 +262,7 @@ exports.cancelRenewRequest= async (req,res)=>{
 }
 
 // reject renew book request - admin
-exports.rejectRenewBookRequest= async (req,res)=>{
+exports.rejectRenewalRequest= async (req,res)=>{
     try {
         const admin = req.user._id
 
