@@ -73,7 +73,7 @@ exports.returnBookRequest= async (req,res)=>{
 }
 
 // cancel return book request 
-exports.cancelReturnBookRequest= async (req,res)=>{
+exports.cancelReturnRequest= async (req,res)=>{
     try {
         const admin = req.user._id;
 
