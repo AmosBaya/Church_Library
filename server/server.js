@@ -11,6 +11,7 @@ const categoryRoutes =require('./routes/categoryRoutes');
 const bookRoutes = require('./routes/bookRoutes');
 const borrowRoutes = require('./routes/borrowRoutes');
 const renewalRoutes = require('./routes/renewRoutes');
+const returnRoutes = require('./routes/returnRoutes');
 
 //middlewares
 app.use(cors())
@@ -22,7 +23,8 @@ app.use("/api/test", userTest);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/books", bookRoutes);
 app.use("/api/borrow", borrowRoutes);
-app.use("/api/borrow/renew", renewalRoutes)
+app.use("/api/borrow/renew", renewalRoutes);
+app.use("/borrow/return", returnRoutes)
 
 // starting app
 const PORT = process.env.PORT || 5000
